@@ -26,8 +26,8 @@ const clearRankBtn = document.getElementById("clearRankBtn");
 const playerImage = new Image();
 playerImage.src = "./marine.png";
 
-const introBgm = new Audio("./intro.mp3");
-const playBgm = new Audio("./playbgm.mp3");
+const introBgm = new Audio("./bgm_intro.mp3");
+const playBgm = new Audio("./bgm_play.mp3");
 const startSound = new Audio("./start.mp3");
 const smallGunSound = new Audio("./smallgun.mp3");
 const bigGunSound = new Audio("./biggun.mp3");
