@@ -16,6 +16,14 @@ const saveRankBtn = document.getElementById("saveRankBtn");
 const rankingList = document.getElementById("rankingList");
 const clearRankBtn = document.getElementById("clearRankBtn");
 
+const smallGunSound = new Audio("./smallgun.mp3");
+const bigGunSound = new Audio("./biggun.mp3");
+const finishSound = new Audio("./finish.mp3");
+
+smallGunSound.volume = 0.35;
+bigGunSound.volume = 0.65;
+finishSound.volume = 0.7;
+
 let player;
 let bullets;
 let keys;
@@ -27,8 +35,6 @@ let animationId;
 let score = 0;
 let difficultyLevel = 1;
 let finalScore = 0;
-
-let audioContext;
 let soundEnabled = true;
 
 const rankStorageKey = "bulletDodgeRankingsByBullets";
@@ -51,6 +57,8 @@ function initGame() {
   difficultyLevel = 1;
   finalScore = 0;
 
+  stopSound(finishSound);
+
   updateUI();
   message.textContent = "게임 시작 버튼을 누르세요";
 
@@ -66,92 +74,20 @@ function updateUI() {
   nextLevelText.textContent = difficultyLevel * 10;
 }
 
-function initAudio() {
-  if (!audioContext) {
-    audioContext = new AudioContext();
-  }
+function playSound(sound) {
+  if (!soundEnabled) return;
 
-  if (audioContext.state === "suspended") {
-    audioContext.resume();
-  }
+  sound.currentTime = 0;
+  sound.play().catch(() => {});
 }
 
-function playLaserSound() {
-  if (!soundEnabled || !audioContext) return;
-
-  const oscillator = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-
-  oscillator.type = "sawtooth";
-  oscillator.frequency.setValueAtTime(900, audioContext.currentTime);
-  oscillator.frequency.exponentialRampToValueAtTime(180, audioContext.currentTime + 0.12);
-
-  gainNode.gain.setValueAtTime(0.09, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.12);
-
-  oscillator.connect(gainNode);
-  gainNode.connect(audioContext.destination);
-
-  oscillator.start();
-  oscillator.stop(audioContext.currentTime + 0.12);
-}
-
-function playLevelUpSound() {
-  if (!soundEnabled || !audioContext) return;
-
-  const notes = [440, 660, 880];
-
-  notes.forEach((freq, index) => {
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    const start = audioContext.currentTime + index * 0.08;
-
-    oscillator.type = "triangle";
-    oscillator.frequency.setValueAtTime(freq, start);
-
-    gainNode.gain.setValueAtTime(0.12, start);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, start + 0.18);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.start(start);
-    oscillator.stop(start + 0.18);
-  });
-}
-
-function playDisappointedSound() {
-  if (!soundEnabled || !audioContext) return;
-
-  const now = audioContext.currentTime;
-
-  for (let i = 0; i < 5; i++) {
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    const start = now + i * 0.08;
-
-    oscillator.type = "sawtooth";
-    oscillator.frequency.setValueAtTime(240 - i * 20, start);
-    oscillator.frequency.exponentialRampToValueAtTime(90, start + 0.45);
-
-    gainNode.gain.setValueAtTime(0.001, start);
-    gainNode.gain.exponentialRampToValueAtTime(0.1, start + 0.08);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, start + 0.5);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.start(start);
-    oscillator.stop(start + 0.5);
-  }
+function stopSound(sound) {
+  sound.pause();
+  sound.currentTime = 0;
 }
 
 function startGame() {
   if (gameRunning) return;
-
-  initAudio();
 
   bullets = [];
   gameRunning = true;
@@ -161,6 +97,8 @@ function startGame() {
   score = 0;
   difficultyLevel = 1;
   finalScore = 0;
+
+  stopSound(finishSound);
 
   nameInputBox.classList.add("hidden");
   message.textContent = "탄막을 최대한 많이 피하세요!";
@@ -215,6 +153,10 @@ function getBulletsPerWave() {
   return Math.min(5, 1 + Math.floor(difficultyLevel / 3));
 }
 
+function getBigBulletRadius() {
+  return 26;
+}
+
 function createBullets(timestamp) {
   const spawnInterval = getSpawnInterval();
 
@@ -225,7 +167,7 @@ function createBullets(timestamp) {
       createSingleBullet();
     }
 
-    playLaserSound();
+    playSound(smallGunSound);
     lastBulletTime = timestamp;
   }
 }
@@ -253,17 +195,50 @@ function createSingleBullet() {
   const angle = Math.atan2(player.y - y, player.x - x);
   const randomAngleOffset = (Math.random() - 0.5) * 0.35;
 
-  const vx = Math.cos(angle + randomAngleOffset) * speed;
-  const vy = Math.sin(angle + randomAngleOffset) * speed;
-
   bullets.push({
     x,
     y,
     radius: 7,
-    vx,
-    vy,
-    counted: false
+    vx: Math.cos(angle + randomAngleOffset) * speed,
+    vy: Math.sin(angle + randomAngleOffset) * speed,
+    counted: false,
+    isBig: false
   });
+}
+
+function createBigLevelUpBullet() {
+  const side = Math.floor(Math.random() * 4);
+  let x, y;
+
+  const speed = getBulletSpeed() * 0.85;
+
+  if (side === 0) {
+    x = Math.random() * canvas.width;
+    y = -30;
+  } else if (side === 1) {
+    x = canvas.width + 30;
+    y = Math.random() * canvas.height;
+  } else if (side === 2) {
+    x = Math.random() * canvas.width;
+    y = canvas.height + 30;
+  } else {
+    x = -30;
+    y = Math.random() * canvas.height;
+  }
+
+  const angle = Math.atan2(player.y - y, player.x - x);
+
+  bullets.push({
+    x,
+    y,
+    radius: getBigBulletRadius(),
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    counted: false,
+    isBig: true
+  });
+
+  playSound(bigGunSound);
 }
 
 function moveBullets() {
@@ -285,10 +260,10 @@ function moveBullets() {
 
   bullets = bullets.filter((bullet) => {
     return (
-      bullet.x > -40 &&
-      bullet.x < canvas.width + 40 &&
-      bullet.y > -40 &&
-      bullet.y < canvas.height + 40
+      bullet.x > -50 &&
+      bullet.x < canvas.width + 50 &&
+      bullet.y > -50 &&
+      bullet.y < canvas.height + 50
     );
   });
 }
@@ -298,8 +273,8 @@ function updateDifficulty() {
 
   if (newLevel > difficultyLevel) {
     difficultyLevel = newLevel;
-    message.textContent = `난이도 ${difficultyLevel} 상승!`;
-    playLevelUpSound();
+    message.textContent = `난이도 ${difficultyLevel} 상승! 큰 탄막 등장!`;
+    createBigLevelUpBullet();
   }
 }
 
@@ -326,7 +301,7 @@ function endGame() {
   cancelAnimationFrame(animationId);
 
   message.textContent = `게임 종료! 총 ${finalScore}개의 총알을 피했습니다.`;
-  playDisappointedSound();
+  playSound(finishSound);
 
   nameInputBox.classList.remove("hidden");
   nicknameInput.focus();
@@ -347,12 +322,9 @@ function saveRanking() {
 
   const rankings = getRankings();
   rankings.push(newRecord);
-
   rankings.sort((a, b) => b.score - a.score);
 
-  const top10 = rankings.slice(0, 10);
-
-  localStorage.setItem(rankStorageKey, JSON.stringify(top10));
+  localStorage.setItem(rankStorageKey, JSON.stringify(rankings.slice(0, 10)));
 
   nameInputBox.classList.add("hidden");
   renderRankings();
@@ -414,8 +386,16 @@ function drawBullets() {
   bullets.forEach((bullet) => {
     ctx.beginPath();
     ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
-    ctx.fillStyle = "#ef4444";
+    ctx.fillStyle = bullet.isBig ? "#facc15" : "#ef4444";
     ctx.fill();
+
+    if (bullet.isBig) {
+      ctx.beginPath();
+      ctx.arc(bullet.x, bullet.y, bullet.radius + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = "#fde68a";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
   });
 }
 
