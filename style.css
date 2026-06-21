@@ -14,7 +14,7 @@ canvas{display:block;width:800px;height:520px;background:#020617;border:3px soli
 .guide-content p{margin:10px 0;padding:9px 12px;border-left:3px solid #38bdf8;background:rgba(15,23,42,.85);color:#dbeafe}
 .guide-content strong{display:inline-block;width:54px;color:#facc15}
 .level-up,.start-text{position:absolute;left:50%;top:42%;z-index:8;transform:translate(-50%,-50%);font-weight:900;pointer-events:none}
-.level-up{font-size:46px;color:#facc15;letter-spacing:4px;text-shadow:0 0 8px #facc15,0 0 18px #fb923c;animation:levelUpPop .8s ease-out}
+.level-up{top:50%;font-size:46px;color:#facc15;letter-spacing:4px;text-shadow:0 0 8px #facc15,0 0 18px #fb923c;animation:levelUpPop .8s ease-out}
 .start-text{font-size:42px;color:#e0f2fe;letter-spacing:3px;white-space:nowrap;width:max-content;text-shadow:0 0 10px #38bdf8,0 0 24px #2563eb;animation:startPop 1.1s ease-out}
 @keyframes levelUpPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.7)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-70%) scale(1)}}
 @keyframes startPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.78)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}70%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-64%) scale(1.05)}}

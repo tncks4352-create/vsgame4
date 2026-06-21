@@ -34,6 +34,7 @@ const playBgm=new Audio("./bgm_play.mp3");
 const startSound=new Audio("./start.mp3");
 const smallGunSound=new Audio("./smallgun.mp3");
 const bigGunSound=new Audio("./biggun.mp3");
+const levelUpSound=new Audio("./levelup.mp3");
 const finishSound=new Audio("./finish.mp3");
 
 introBgm.loop=true;
@@ -44,12 +45,14 @@ playBgm.volume=.2;
 startSound.volume=.8;
 smallGunSound.volume=.35;
 bigGunSound.volume=.65;
+levelUpSound.volume=.75;
 finishSound.volume=.75;
 
 const rankStorageKey="spaceBulletSurvivalRankingsV5";
 
 let player;
 let bullets=[];
+let bigBulletWarnings=[];
 let stars=[];
 let keys={};
 let gameRunning=false;
@@ -78,6 +81,7 @@ function initGame(){
   };
 
   bullets=[];
+  bigBulletWarnings=[];
   keys={};
   gameRunning=false;
   gameOver=false;
@@ -91,6 +95,7 @@ function initGame(){
 
   createStars();
   stopSound(playBgm);
+  stopSound(levelUpSound);
   stopSound(finishSound);
   hideNameInput();
 
@@ -213,6 +218,7 @@ async function startGame(){
   introScreen.classList.add("hidden");
   guideScreen.classList.add("hidden");
   hideNameInput();
+  stopSound(levelUpSound);
   stopSound(finishSound);
 
   await fadeOut(introBgm,450);
@@ -225,6 +231,7 @@ async function startGame(){
     cancelAnimationFrame(menuAnimationId);
 
     bullets=[];
+    bigBulletWarnings=[];
     gameRunning=true;
     gameOver=false;
     isStarting=false;
@@ -249,6 +256,7 @@ function restartGame(){
   cancelAnimationFrame(animationId);
   cancelAnimationFrame(menuAnimationId);
   stopSound(playBgm);
+  stopSound(levelUpSound);
   stopSound(finishSound);
   initGame();
   introScreen.classList.add("hidden");
@@ -269,6 +277,7 @@ function update(timestamp){
   updateStars();
   movePlayer();
   createBullets(timestamp);
+  updateBigBulletWarnings(timestamp);
   moveBullets();
   checkCollision();
   updateDifficulty();
@@ -335,23 +344,43 @@ function createSingleBullet(){
     vx:Math.cos(angle+randomAngleOffset)*speed,
     vy:Math.sin(angle+randomAngleOffset)*speed,
     counted:false,
+    hasEntered:false,
     isBig:false,
     trail:[]
   });
 }
 
 function createBigLevelUpBullet(){
-  const spawn=getSpawnPosition(36);
+  const spawn=getSpawnPosition(60);
+
+  bigBulletWarnings.push({
+    spawn,
+    startedAt:performance.now(),
+    duration:1300
+  });
+}
+
+function updateBigBulletWarnings(timestamp){
+  bigBulletWarnings=bigBulletWarnings.filter((warning)=>{
+    if(timestamp-warning.startedAt<warning.duration)return true;
+
+    fireBigLevelUpBullet(warning.spawn);
+    return false;
+  });
+}
+
+function fireBigLevelUpBullet(spawn){
   const speed=getBulletSpeed()*.82;
   const angle=Math.atan2(player.y-spawn.y,player.x-spawn.x);
 
   bullets.push({
     x:spawn.x,
     y:spawn.y,
-    radius:27,
+    radius:50,
     vx:Math.cos(angle)*speed,
     vy:Math.sin(angle)*speed,
     counted:false,
+    hasEntered:false,
     isBig:true,
     trail:[]
   });
@@ -363,11 +392,11 @@ function createBigLevelUpBullet(){
 function getSpawnPosition(offset){
   const side=Math.floor(Math.random()*4);
 
-  if(side===0)return{x:Math.random()*canvas.width,y:-offset};
-  if(side===1)return{x:canvas.width+offset,y:Math.random()*canvas.height};
-  if(side===2)return{x:Math.random()*canvas.width,y:canvas.height+offset};
+  if(side===0)return{x:Math.random()*canvas.width,y:-offset,side};
+  if(side===1)return{x:canvas.width+offset,y:Math.random()*canvas.height,side};
+  if(side===2)return{x:Math.random()*canvas.width,y:canvas.height+offset,side};
 
-  return{x:-offset,y:Math.random()*canvas.height};
+  return{x:-offset,y:Math.random()*canvas.height,side};
 }
 
 function moveBullets(){
@@ -378,16 +407,21 @@ function moveBullets(){
     bullet.x+=bullet.vx;
     bullet.y+=bullet.vy;
 
-    const out=bullet.x<-35||bullet.x>canvas.width+35||bullet.y<-35||bullet.y>canvas.height+35;
+    const inside=bullet.x>=0&&bullet.x<=canvas.width&&bullet.y>=0&&bullet.y<=canvas.height;
+    if(inside)bullet.hasEntered=true;
 
-    if(out&&!bullet.counted){
+    const margin=bullet.radius+8;
+    const out=bullet.x<-margin||bullet.x>canvas.width+margin||bullet.y<-margin||bullet.y>canvas.height+margin;
+
+    if(bullet.hasEntered&&out&&!bullet.counted){
       score+=1;
       bullet.counted=true;
     }
   });
 
   bullets=bullets.filter((bullet)=>{
-    return bullet.x>-70&&bullet.x<canvas.width+70&&bullet.y>-70&&bullet.y<canvas.height+70;
+    const margin=Math.max(70,bullet.radius*3);
+    return bullet.x>-margin&&bullet.x<canvas.width+margin&&bullet.y>-margin&&bullet.y<canvas.height+margin;
   });
 }
 
@@ -403,6 +437,7 @@ function updateDifficulty(){
 }
 
 function showLevelUp(){
+  playSound(levelUpSound);
   levelUpText.classList.remove("hidden");
   levelUpText.style.animation="none";
   levelUpText.offsetHeight;
@@ -515,6 +550,7 @@ function draw(){
   ctx.translate(shake.x,shake.y);
 
   drawBackground();
+  drawBigBulletWarnings();
   drawBullets();
   drawPlayer();
 
@@ -571,6 +607,61 @@ function drawGrid(){
     ctx.lineTo(canvas.width,y);
     ctx.stroke();
   }
+}
+
+function drawBigBulletWarnings(){
+  const now=performance.now();
+
+  bigBulletWarnings.forEach((warning)=>{
+    const {spawn,startedAt,duration}=warning;
+    const progress=Math.min(1,(now-startedAt)/duration);
+    const pulse=.55+Math.sin(progress*Math.PI*10)*.35;
+    const markerX=Math.max(24,Math.min(canvas.width-24,spawn.x));
+    const markerY=Math.max(24,Math.min(canvas.height-24,spawn.y));
+    const angle=[Math.PI/2,Math.PI,-Math.PI/2,0][spawn.side];
+
+    ctx.save();
+    ctx.globalAlpha=Math.max(.25,pulse);
+    ctx.strokeStyle="#ef4444";
+    ctx.fillStyle="rgba(239,68,68,.22)";
+    ctx.shadowColor="#ef4444";
+    ctx.shadowBlur=24;
+    ctx.lineWidth=8;
+
+    ctx.beginPath();
+    if(spawn.side===0||spawn.side===2){
+      ctx.moveTo(markerX-65,spawn.side===0?2:canvas.height-2);
+      ctx.lineTo(markerX+65,spawn.side===0?2:canvas.height-2);
+    }else{
+      ctx.moveTo(spawn.side===3?2:canvas.width-2,markerY-65);
+      ctx.lineTo(spawn.side===3?2:canvas.width-2,markerY+65);
+    }
+    ctx.stroke();
+
+    ctx.translate(markerX,markerY);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(25,0);
+    ctx.lineTo(-15,-18);
+    ctx.lineTo(-15,18);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle="#fecaca";
+    ctx.lineWidth=3;
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha=.65+progress*.35;
+    ctx.fillStyle="#fee2e2";
+    ctx.font="bold 16px Arial";
+    ctx.textAlign="center";
+    ctx.shadowColor="#ef4444";
+    ctx.shadowBlur=10;
+    const textY=spawn.side===2?markerY-32:markerY+42;
+    ctx.fillText("WARNING!",markerX,textY);
+    ctx.restore();
+  });
 }
 
 function drawPlayer(){
@@ -696,6 +787,7 @@ soundBtn.addEventListener("click",()=>{
     stopSound(startSound);
     stopSound(smallGunSound);
     stopSound(bigGunSound);
+    stopSound(levelUpSound);
     stopSound(finishSound);
   }
 });
