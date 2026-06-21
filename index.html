@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0f172a" />
   <link rel="manifest" href="./manifest.json" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
-  <title>Space Bullet Survival</title>
+  <title>Survive in Space</title>
   <style>
 *{box-sizing:border-box}
 html{width:100%;min-height:100%;background:#000}
@@ -55,7 +55,7 @@ input{width:180px;padding:10px;border:1px solid #38bdf8;border-radius:6px;backgr
 </head>
 <body>
   <main class="game-wrapper">
-    <h1>SPACE BULLET SURVIVAL</h1>
+    <h1>SURVIVE IN SPACE</h1>
 
     <section class="hud">
       <div>난이도 <strong id="levelText">1</strong></div>
@@ -69,7 +69,7 @@ input{width:180px;padding:10px;border:1px solid #38bdf8;border-radius:6px;backgr
       <div id="startText" class="start-text hidden">OK, LET'S GO!</div>
 
       <section id="introScreen" class="overlay-panel">
-        <h2>SPACE BULLET SURVIVAL</h2>
+        <h2>SURVIVE IN SPACE</h2>
         <p class="subtitle">SURVIVE THE INCOMING FIRE</p>
         <button id="introStartBtn">게임 시작</button>
       </section>
@@ -97,8 +97,8 @@ input{width:180px;padding:10px;border:1px solid #38bdf8;border-radius:6px;backgr
 
     <section class="controls">
       <p>조작: WASD 또는 방향키</p>
-      <button id="startBtn">게임 시작</button>
       <button id="restartBtn">다시 시작</button>
+      <button id="viewRankBtn">랭킹 보기</button>
       <button id="soundBtn">사운드 ON</button>
     </section>
 
@@ -108,7 +108,7 @@ input{width:180px;padding:10px;border:1px solid #38bdf8;border-radius:6px;backgr
     <section class="ranking-box">
       <button id="closeRankBtn" class="close-modal" type="button" aria-label="랭킹 닫기">×</button>
       <h2 id="rankingTitle">RANKING TOP 10</h2>
-      <p class="final-score">피한 총알 <strong id="finalScoreText">0</strong>개</p>
+      <p id="finalScoreLine" class="final-score">피한 총알 <strong id="finalScoreText">0</strong>개</p>
       <section id="nameInputBox" class="name-box hidden">
         <input type="text" id="nicknameInput" placeholder="닉네임 입력" maxlength="10" />
         <button id="saveRankBtn">기록 저장</button>
@@ -136,8 +136,8 @@ const guideScreen=document.getElementById("guideScreen");
 const introStartBtn=document.getElementById("introStartBtn");
 const playStartBtn=document.getElementById("playStartBtn");
 
-const startBtn=document.getElementById("startBtn");
 const restartBtn=document.getElementById("restartBtn");
+const viewRankBtn=document.getElementById("viewRankBtn");
 const soundBtn=document.getElementById("soundBtn");
 
 const nameInputBox=document.getElementById("nameInputBox");
@@ -147,6 +147,7 @@ const rankingList=document.getElementById("rankingList");
 const clearRankBtn=document.getElementById("clearRankBtn");
 const rankingModal=document.getElementById("rankingModal");
 const finalScoreText=document.getElementById("finalScoreText");
+const finalScoreLine=document.getElementById("finalScoreLine");
 const closeRankBtn=document.getElementById("closeRankBtn");
 const modalRestartBtn=document.getElementById("modalRestartBtn");
 
@@ -350,7 +351,6 @@ async function startGame(){
   if(gameRunning||isStarting)return;
 
   isStarting=true;
-  startBtn.disabled=true;
   playStartBtn.disabled=true;
 
   introScreen.classList.add("hidden");
@@ -375,7 +375,6 @@ async function startGame(){
     gameOver=false;
     gameWrapper.classList.add("playing");
     isStarting=false;
-    startBtn.disabled=false;
     playStartBtn.disabled=false;
 
     lastBulletTime=performance.now();
@@ -443,7 +442,11 @@ function movePlayer(deltaFrames){
     dy*=diagonalScale;
   }
 
-  player.x+=dx*player.speed*deltaFrames;
+  const displayScaleX=canvas.clientWidth/canvas.width||1;
+  const displayScaleY=canvas.clientHeight/canvas.height||1;
+  const horizontalSpeedCorrection=displayScaleY/displayScaleX;
+
+  player.x+=dx*player.speed*deltaFrames*horizontalSpeedCorrection;
   player.y+=dy*player.speed*deltaFrames;
   if(dx<0)playerDirection="left";
   if(dx>0)playerDirection="right";
@@ -634,6 +637,7 @@ function endGame(){
   },1200);
 
   finalScoreText.textContent=finalScore;
+  finalScoreLine.classList.remove("hidden");
   renderRankings();
   rankingModal.classList.remove("hidden");
   nameInputBox.classList.remove("hidden");
@@ -666,6 +670,14 @@ function hideNameInput(){
 
 function hideRankingModal(){
   rankingModal.classList.add("hidden");
+}
+
+function showRankings(){
+  if(gameRunning)return;
+  hideNameInput();
+  finalScoreLine.classList.add("hidden");
+  renderRankings();
+  rankingModal.classList.remove("hidden");
 }
 
 function getRankings(){
@@ -951,16 +963,8 @@ playStartBtn.addEventListener("click",()=>{
   startGame();
 });
 
-startBtn.addEventListener("click",()=>{
-  if(!gameRunning&&!isStarting){
-    lockPortraitOrientation();
-    introScreen.classList.add("hidden");
-    guideScreen.classList.remove("hidden");
-    playLoop(introBgm);
-  }
-});
-
 restartBtn.addEventListener("click",restartGame);
+viewRankBtn.addEventListener("click",showRankings);
 saveRankBtn.addEventListener("click",saveRanking);
 clearRankBtn.addEventListener("click",clearRankings);
 closeRankBtn.addEventListener("click",hideRankingModal);
