@@ -1,4 +1,4 @@
-const CACHE_NAME="space-survival-v1";
+const CACHE_NAME="space-survival-v2";
 const APP_ASSETS=[
   "./",
   "./index.html",
