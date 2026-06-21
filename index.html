@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <title>Space Bullet Survival</title>
   <style>
 *{box-sizing:border-box}
@@ -961,6 +964,14 @@ planetImage.addEventListener("load",draw);
 
 initGame();
 renderRankings();
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./sw.js").catch((error)=>{
+      console.error("서비스 워커 등록 실패:",error);
+    });
+  });
+}
 
   </script>
 </body>

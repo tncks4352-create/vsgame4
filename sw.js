@@ -1,0 +1,38 @@
+const CACHE_NAME="space-survival-v1";
+const APP_ASSETS=[
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+  "./marine.png",
+  "./planet.png",
+  "./bgm_intro.mp3",
+  "./bgm_play.mp3",
+  "./start.mp3",
+  "./smallgun.mp3",
+  "./biggun.mp3",
+  "./levelup.mp3",
+  "./finish.mp3"
+];
+
+self.addEventListener("install",(event)=>{
+  event.waitUntil(caches.open(CACHE_NAME).then((cache)=>cache.addAll(APP_ASSETS)));
+  self.skipWaiting();
+});
+
+self.addEventListener("activate",(event)=>{
+  event.waitUntil(
+    caches.keys().then((keys)=>Promise.all(
+      keys.filter((key)=>key!==CACHE_NAME).map((key)=>caches.delete(key))
+    ))
+  );
+  self.clients.claim();
+});
+
+self.addEventListener("fetch",(event)=>{
+  if(event.request.method!=="GET")return;
+  event.respondWith(
+    caches.match(event.request).then((cached)=>cached||fetch(event.request))
+  );
+});
