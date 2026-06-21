@@ -18,8 +18,8 @@ h1{margin:0 0 18px;color:#bfdbfe;letter-spacing:4px;text-shadow:0 0 14px rgba(56
 .hud strong{color:#facc15}
 .canvas-frame{position:relative;width:800px;margin:0 auto}
 canvas{display:block;width:800px;height:520px;background:#020617;border:3px solid #38bdf8;box-shadow:0 0 18px rgba(56,189,248,.55),inset 0 0 40px rgba(14,165,233,.12)}
-.touch-controls{display:grid;grid-template-columns:repeat(3,72px);grid-template-rows:repeat(3,62px);justify-content:center;gap:6px;margin:12px auto 6px;padding:2px;user-select:none;-webkit-user-select:none;touch-action:none}
-.touch-btn{width:72px;height:62px;margin:0;padding:0;display:grid;place-items:center;border:2px solid #7dd3fc;border-radius:18px;font-size:32px;line-height:1;background:linear-gradient(180deg,#2563eb,#0f172a);box-shadow:0 0 14px rgba(56,189,248,.5),inset 0 0 10px rgba(125,211,252,.25);touch-action:none;-webkit-tap-highlight-color:transparent}
+.touch-controls{display:grid;grid-template-columns:repeat(3,86px);grid-template-rows:repeat(3,72px);justify-content:center;gap:7px;margin:8px auto 6px;padding:2px;user-select:none;-webkit-user-select:none;touch-action:none}
+.touch-btn{width:86px;height:72px;margin:0;padding:0;display:grid;place-items:center;border:2px solid #7dd3fc;border-radius:20px;font-size:36px;line-height:1;background:linear-gradient(180deg,#2563eb,#0f172a);box-shadow:0 0 14px rgba(56,189,248,.5),inset 0 0 10px rgba(125,211,252,.25);touch-action:none;-webkit-tap-highlight-color:transparent}
 .touch-btn[data-direction="up"]{grid-column:2;grid-row:1}.touch-btn[data-direction="left"]{grid-column:1;grid-row:2}.touch-btn[data-direction="right"]{grid-column:3;grid-row:2}.touch-btn[data-direction="down"]{grid-column:2;grid-row:3}
 .touch-btn.is-pressed{transform:translateY(2px) scale(.94);background:linear-gradient(180deg,#38bdf8,#1d4ed8);box-shadow:0 0 24px rgba(125,211,252,.9),inset 0 0 14px rgba(255,255,255,.35)}
 .overlay-panel{position:absolute;inset:18px;z-index:10;padding:32px;display:flex;flex-direction:column;justify-content:center;align-items:center;border:1px solid rgba(125,211,252,.8);border-radius:14px;background:linear-gradient(180deg,rgba(15,23,42,.92),rgba(2,6,23,.96)),radial-gradient(circle at 50% 0%,rgba(56,189,248,.22),transparent 50%);box-shadow:0 0 22px rgba(56,189,248,.4),inset 0 0 22px rgba(37,99,235,.35);backdrop-filter:blur(3px)}
@@ -49,7 +49,7 @@ input{width:180px;padding:10px;border:1px solid #38bdf8;border-radius:6px;backgr
 #rankingList{min-height:28px;padding-left:28px}#rankingList li{margin:9px 0;color:#e5e7eb}
 #clearRankBtn{display:block;margin:12px auto 0;border-color:#f87171;background:linear-gradient(#991b1b,#450a0a)}
 @media(max-width:920px){body{padding:0;align-items:stretch;overscroll-behavior:none}.game-wrapper{width:100%;min-height:100svh;padding:10px 8px 22px;border-width:0;border-radius:0}.game-wrapper>h1{margin-bottom:8px;font-size:clamp(18px,5vw,28px);letter-spacing:2px}.hud,.canvas-frame,canvas{width:100%}.hud{margin-bottom:7px;flex-direction:row;font-size:clamp(11px,3.2vw,15px)}.hud div{padding:7px 3px}.canvas-frame{height:clamp(300px,52svh,520px)}canvas{height:100%}.overlay-panel{inset:8px;padding:14px}.overlay-panel h2{font-size:clamp(21px,6vw,30px)}.guide-content{margin:4px 0 8px}.guide-content p{margin:5px 0;padding:6px 8px;font-size:13px}.start-text{font-size:clamp(23px,7vw,34px)}.controls{margin-top:8px}.controls p{display:none}#message{margin-top:7px;font-size:16px}.ranking-modal{padding:10px}.ranking-box{padding:20px 14px}.game-wrapper.playing>.controls{display:none}.game-wrapper.playing{padding-bottom:8px}}
-@media(max-width:420px){.touch-controls{grid-template-columns:repeat(3,min(21vw,76px));grid-template-rows:repeat(3,58px);gap:5px;margin-top:9px}.touch-btn{width:100%;height:58px;font-size:30px}.controls button{padding:8px 10px}}
+@media(max-width:420px){.touch-controls{grid-template-columns:repeat(3,min(24vw,90px));grid-template-rows:repeat(3,68px);gap:6px;margin-top:7px}.touch-btn{width:100%;height:68px;font-size:34px}.controls button{padding:8px 10px}}
 
   </style>
 </head>
@@ -86,6 +86,8 @@ input{width:180px;padding:10px;border:1px solid #38bdf8;border-radius:6px;backgr
       </section>
     </div>
 
+    <div id="message">게임 시작 버튼을 눌러주세요.</div>
+
     <nav class="touch-controls" aria-label="터치 이동 조작">
       <button class="touch-btn" type="button" data-direction="up" aria-label="위로 이동">▲</button>
       <button class="touch-btn" type="button" data-direction="left" aria-label="왼쪽으로 이동">◀</button>
@@ -100,7 +102,6 @@ input{width:180px;padding:10px;border:1px solid #38bdf8;border-radius:6px;backgr
       <button id="soundBtn">사운드 ON</button>
     </section>
 
-    <div id="message">게임 시작 버튼을 눌러주세요.</div>
   </main>
 
   <div id="rankingModal" class="ranking-modal hidden" role="dialog" aria-modal="true" aria-labelledby="rankingTitle">
@@ -187,6 +188,8 @@ let gameOver=false;
 let isStarting=false;
 let animationId=null;
 let menuAnimationId=null;
+let lastFrameTime=0;
+let menuLastFrameTime=0;
 let lastBulletTime=0;
 let playerDirection="right";
 let soundEnabled=true;
@@ -214,6 +217,8 @@ function initGame(){
   gameRunning=false;
   gameOver=false;
   isStarting=false;
+  lastFrameTime=0;
+  menuLastFrameTime=0;
   lastBulletTime=0;
   playerDirection="right";
   score=0;
@@ -237,15 +242,18 @@ function initGame(){
 
 function startMenuAnimation(){
   cancelAnimationFrame(menuAnimationId);
+  menuLastFrameTime=0;
 
-  function animateMenu(){
+  function animateMenu(timestamp){
     if(gameRunning)return;
-    updateStars();
+    const deltaFrames=menuLastFrameTime?Math.min(2.5,(timestamp-menuLastFrameTime)/(1000/60)):1;
+    menuLastFrameTime=timestamp;
+    updateStars(deltaFrames);
     draw();
     menuAnimationId=requestAnimationFrame(animateMenu);
   }
 
-  animateMenu();
+  menuAnimationId=requestAnimationFrame(animateMenu);
 }
 
 function createStars(){
@@ -261,9 +269,9 @@ function createStars(){
   }
 }
 
-function updateStars(){
+function updateStars(deltaFrames=1){
   stars.forEach((star)=>{
-    star.y+=star.speed;
+    star.y+=star.speed*deltaFrames;
     if(star.y>canvas.height){
       star.y=0;
       star.x=Math.random()*canvas.width;
@@ -380,7 +388,8 @@ async function startGame(){
     updateUI();
 
     playLoop(playBgm);
-    gameLoop();
+    lastFrameTime=0;
+    animationId=requestAnimationFrame(gameLoop);
   },750);
 }
 
@@ -399,38 +408,45 @@ function restartGame(){
 function gameLoop(timestamp){
   if(!gameRunning||gameOver)return;
 
-  update(timestamp);
+  const deltaFrames=lastFrameTime?Math.min(2.5,(timestamp-lastFrameTime)/(1000/60)):1;
+  lastFrameTime=timestamp;
+  update(timestamp,deltaFrames);
   draw();
 
   animationId=requestAnimationFrame(gameLoop);
 }
 
-function update(timestamp){
-  updateStars();
-  movePlayer();
+function update(timestamp,deltaFrames){
+  updateStars(deltaFrames);
+  movePlayer(deltaFrames);
   createBullets(timestamp);
   updateBigBulletWarnings(timestamp);
-  moveBullets();
+  moveBullets(deltaFrames);
   checkCollision();
   updateDifficulty();
   updateUI();
 
-  if(shakeTime>0)shakeTime-=1;
+  if(shakeTime>0)shakeTime-=deltaFrames;
 }
 
-function movePlayer(){
-  if(keys["ArrowUp"]||keys["w"]||keys["W"]||touchKeys.up)player.y-=player.speed;
-  if(keys["ArrowDown"]||keys["s"]||keys["S"]||touchKeys.down)player.y+=player.speed;
+function movePlayer(deltaFrames){
+  let dx=0;
+  let dy=0;
+  if(keys["ArrowUp"]||keys["w"]||keys["W"]||touchKeys.up)dy-=1;
+  if(keys["ArrowDown"]||keys["s"]||keys["S"]||touchKeys.down)dy+=1;
+  if(keys["ArrowLeft"]||keys["a"]||keys["A"]||touchKeys.left)dx-=1;
+  if(keys["ArrowRight"]||keys["d"]||keys["D"]||touchKeys.right)dx+=1;
 
-  if(keys["ArrowLeft"]||keys["a"]||keys["A"]||touchKeys.left){
-    player.x-=player.speed;
-    playerDirection="left";
+  if(dx!==0&&dy!==0){
+    const diagonalScale=Math.SQRT1_2;
+    dx*=diagonalScale;
+    dy*=diagonalScale;
   }
 
-  if(keys["ArrowRight"]||keys["d"]||keys["D"]||touchKeys.right){
-    player.x+=player.speed;
-    playerDirection="right";
-  }
+  player.x+=dx*player.speed*deltaFrames;
+  player.y+=dy*player.speed*deltaFrames;
+  if(dx<0)playerDirection="left";
+  if(dx>0)playerDirection="right";
 
   player.x=Math.max(player.hitRadiusX,Math.min(canvas.width-player.hitRadiusX,player.x));
   player.y=Math.max(player.hitRadiusY,Math.min(canvas.height-player.hitRadiusY,player.y));
@@ -441,7 +457,7 @@ function getSpawnInterval(){
 }
 
 function getBulletSpeed(){
-  return 1.55+difficultyLevel*.22;
+  return 2.05+difficultyLevel*.24;
 }
 
 function getBulletsPerWave(){
@@ -531,13 +547,13 @@ function getSpawnPosition(offset){
   return{x:-offset,y:Math.random()*canvas.height,side};
 }
 
-function moveBullets(){
+function moveBullets(deltaFrames){
   bullets.forEach((bullet)=>{
     bullet.trail.push({x:bullet.x,y:bullet.y});
     if(bullet.trail.length>8)bullet.trail.shift();
 
-    bullet.x+=bullet.vx;
-    bullet.y+=bullet.vy;
+    bullet.x+=bullet.vx*deltaFrames;
+    bullet.y+=bullet.vy*deltaFrames;
 
     const inside=bullet.x>=0&&bullet.x<=canvas.width&&bullet.y>=0&&bullet.y<=canvas.height;
     if(inside)bullet.hasEntered=true;
@@ -878,6 +894,12 @@ function drawBulletTrail(bullet){
   });
 }
 
+function lockPortraitOrientation(){
+  if(screen.orientation&&typeof screen.orientation.lock==="function"){
+    screen.orientation.lock("portrait-primary").catch(()=>{});
+  }
+}
+
 document.addEventListener("keydown",(event)=>{
   if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(event.key)&&document.activeElement?.tagName!=="INPUT")event.preventDefault();
   keys[event.key]=true;
@@ -920,11 +942,18 @@ window.addEventListener("blur",()=>{
   document.querySelectorAll(".touch-btn").forEach((button)=>button.classList.remove("is-pressed"));
 });
 
-introStartBtn.addEventListener("click",openGuide);
-playStartBtn.addEventListener("click",startGame);
+introStartBtn.addEventListener("click",()=>{
+  lockPortraitOrientation();
+  openGuide();
+});
+playStartBtn.addEventListener("click",()=>{
+  lockPortraitOrientation();
+  startGame();
+});
 
 startBtn.addEventListener("click",()=>{
   if(!gameRunning&&!isStarting){
+    lockPortraitOrientation();
     introScreen.classList.add("hidden");
     guideScreen.classList.remove("hidden");
     playLoop(introBgm);
@@ -966,6 +995,7 @@ renderRankings();
 
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{
+    lockPortraitOrientation();
     navigator.serviceWorker.register("./sw.js").catch((error)=>{
       console.error("서비스 워커 등록 실패:",error);
     });
